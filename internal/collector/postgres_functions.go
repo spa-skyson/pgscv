@@ -96,6 +96,10 @@ func (c *postgresFunctionsCollector) Update(config Config, ch chan<- prometheus.
 		if !config.DatabasesRE.MatchString(d) {
 			continue
 		}
+		// Skip database if matched to excluded.
+		if config.DatabasesExcludeRE != nil && config.DatabasesExcludeRE.MatchString(d) {
+			continue
+		}
 
 		pgconfig.Database = d
 		conn, err := store.NewWithConfig(pgconfig)

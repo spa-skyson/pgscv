@@ -31,6 +31,8 @@ type Config struct {
 	postgresServiceConfig
 	// DatabasesRE defines regexp with databases from which builtin metrics should be collected.
 	DatabasesRE *regexp.Regexp
+	// DatabasesExcludeRE defines regexp with databases which should be excluded from metrics collection.
+	DatabasesExcludeRE *regexp.Regexp
 	// Settings defines collectors settings propagated from main YAML configuration.
 	Settings         model.CollectorsSettings
 	CollectTopTable  int

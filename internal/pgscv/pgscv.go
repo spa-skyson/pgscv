@@ -39,6 +39,7 @@ func Start(ctx context.Context, config *Config) error {
 		ConnDefaults:       config.Defaults,
 		ConnsSettings:      config.ServicesConnsSettings,
 		DatabasesRE:        config.DatabasesRE,
+		DatabasesExcludeRE: config.DatabasesExcludeRE,
 		DisabledCollectors: config.DisableCollectors,
 		CollectorsSettings: config.CollectorsSettings,
 		CollectTopTable:    config.CollectTopTable,

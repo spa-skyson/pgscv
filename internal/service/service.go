@@ -47,7 +47,9 @@ type Config struct {
 	ConnDefaults  map[string]string `yaml:"defaults"` // Defaults
 	ConnsSettings ConnsSettings
 	// DatabasesRE defines regexp with databases from which builtin metrics should be collected.
-	DatabasesRE        *regexp.Regexp
+	DatabasesRE *regexp.Regexp
+	// DatabasesExcludeRE defines regexp with databases which should be excluded from metrics collection.
+	DatabasesExcludeRE *regexp.Regexp
 	DisabledCollectors []string
 	// CollectorsSettings defines all collector settings propagated from main YAML configuration.
 	CollectorsSettings model.CollectorsSettings
@@ -276,7 +278,8 @@ func (repo *Repository) setupServices(config Config) error {
 					ServiceType:      service.ConnSettings.ServiceType,
 					ConnString:       service.ConnSettings.Conninfo,
 					Settings:         config.CollectorsSettings,
-					DatabasesRE:      config.DatabasesRE,
+					DatabasesRE:        config.DatabasesRE,
+					DatabasesExcludeRE: config.DatabasesExcludeRE,
 					CollectTopTable:  config.CollectTopTable,
 					CollectTopIndex:  config.CollectTopIndex,
 					CollectTopQuery:  config.CollectTopQuery,

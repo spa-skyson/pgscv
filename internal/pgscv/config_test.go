@@ -648,3 +648,30 @@ func Test_newDatabasesRegexp(t *testing.T) {
 		}
 	}
 }
+
+func Test_newDatabasesExcludeRegexp(t *testing.T) {
+	testcases := []struct {
+		valid  bool
+		str    string
+		isNil  bool
+	}{
+		{valid: true, str: "^[a-z_]+_dev$", isNil: false},
+		{valid: true, str: "", isNil: true},
+		{valid: false, str: "[", isNil: true},
+	}
+
+	for _, tc := range testcases {
+		got, err := newDatabasesExcludeRegexp(tc.str)
+		if tc.valid {
+			assert.NoError(t, err)
+			if tc.isNil {
+				assert.Nil(t, got)
+			} else {
+				assert.NotNil(t, got)
+			}
+		} else {
+			assert.Error(t, err)
+			assert.Nil(t, got)
+		}
+	}
+}

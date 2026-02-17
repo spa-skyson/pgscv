@@ -39,6 +39,8 @@ type Config struct {
 	CollectorsSettings    model.CollectorsSettings `yaml:"collectors"`         // Collectors settings propagated from main YAML configuration
 	Databases             string                   `yaml:"databases"`          // Regular expression string specifies databases from which metrics should be collected
 	DatabasesRE           *regexp.Regexp           // Regular expression object compiled from Databases
+	DatabasesExclude      string                   `yaml:"databases_exclude"`  // Regular expression string specifies databases which should be excluded from metrics collection
+	DatabasesExcludeRE    *regexp.Regexp           // Regular expression object compiled from DatabasesExclude
 	AuthConfig            http.AuthConfig          `yaml:"authentication"`       // TLS and Basic auth configuration
 	CollectTopTable       int                      `yaml:"collect_top_table"`    // Limit elements on Table collector
 	CollectTopIndex       int                      `yaml:"collect_top_index"`    // Limit elements on Indexes collector
@@ -101,6 +103,13 @@ func NewConfig(configFilePath string) (*Config, error) {
 			} else {
 				// If set environment variable PGSCV_DATABASES and 'databases' settings from file is not empty, then use 'databases' settings from file
 				log.Debug("PGSCV_DATABASES environment setting was ignored, the settings from configuration file were used.")
+			}
+		}
+		if configFromEnv.DatabasesExclude != "" {
+			if configFromFile.DatabasesExclude == "" {
+				configFromFile.DatabasesExclude = configFromEnv.DatabasesExclude
+			} else {
+				log.Debug("PGSCV_DATABASES_EXCLUDE environment setting was ignored, the settings from configuration file were used.")
 			}
 		}
 		// Set AuthConfig settings
@@ -249,6 +258,13 @@ func (c *Config) Validate() error {
 	}
 	c.DatabasesRE = re
 	log.Infoln("option 'databases' is deprecated and removed in next major release.")
+
+	// Create 'databases_exclude' regexp object for builtin metrics.
+	reExclude, err := newDatabasesExcludeRegexp(c.DatabasesExclude)
+	if err != nil {
+		return err
+	}
+	c.DatabasesExcludeRE = reExclude
 
 	// Validate collector settings.
 	err = validateCollectorSettings(c.CollectorsSettings)
@@ -429,6 +445,8 @@ func newConfigFromEnv() (*Config, error) {
 			config.NoTrackMode = toBool(value)
 		case "PGSCV_DATABASES":
 			config.Databases = value
+		case "PGSCV_DATABASES_EXCLUDE":
+			config.DatabasesExclude = value
 		case "PGSCV_DISABLE_COLLECTORS":
 			config.DisableCollectors = strings.Split(strings.Replace(value, " ", "", -1), ",")
 		case "PGSCV_AUTH_USERNAME":
@@ -500,6 +518,15 @@ func toBool(s string) bool {
 func newDatabasesRegexp(s string) (*regexp.Regexp, error) {
 	if s == "" {
 		s = ".+"
+	}
+
+	return regexp.Compile(s)
+}
+
+// newDatabasesExcludeRegexp creates new regexp for excluding databases. Returns nil if empty string.
+func newDatabasesExcludeRegexp(s string) (*regexp.Regexp, error) {
+	if s == "" {
+		return nil, nil
 	}
 
 	return regexp.Compile(s)
